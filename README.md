@@ -10,4 +10,4 @@ pip install -r requirements.txt
 # Download a pre-trained model
 python -m spacy download en_core_web_sm
 
-To activate virtual environment run command: source .venv/bin/activates
+To activate virtual environment run command: source .venv/bin/activate
