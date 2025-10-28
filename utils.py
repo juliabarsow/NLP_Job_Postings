@@ -1,9 +1,7 @@
 from pydantic import BaseModel, Field
 import pandas as pd
-import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-import spacy
 from ollama import chat
 from typing import List
 import numpy as np
@@ -11,27 +9,8 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 from sklearn.decomposition import PCA
 from scipy.signal import find_peaks
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.manifold import TSNE
-from torchtext.vocab import GloVe
-from transformers import BertTokenizer, BertModel
-import torch
 from collections import Counter
-from nltk.sentiment.vader import SentimentIntensityAnalyzer
-import nltk
-from sklearn.svm import SVC
-from sklearn.model_selection import GridSearchCV
-from sklearn.preprocessing import StandardScaler
-from sklearn.pipeline import Pipeline
-from sklearn.metrics import log_loss, brier_score_loss
 from scipy.stats import mode
-from sklearn.decomposition import LatentDirichletAllocation
-import ast
-from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split
-from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.preprocessing import MinMaxScaler
 
 
 def classify_job_titles(df: pd.DataFrame) -> pd.DataFrame:
