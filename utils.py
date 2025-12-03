@@ -71,8 +71,7 @@ def classify_job_titles(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-# Define the desired output structure using Pydantic
-# This creates a JSON Schema that Ollama is forced to follow
+# Define the desired output structure using Pydantic - this creates a JSON Schema that Ollama is forced to follow
 class JobRequirements(BaseModel):
     """A structured model to hold the extracted skills and requirements from a job posting."""
     skills: List[str] = Field(
@@ -84,7 +83,7 @@ class JobRequirements(BaseModel):
         description="A list of formal requirements, like years of experience, educational degrees, or specific certifications. E.g., 'Bachelor's Degree in Computer Science', '5+ years of experience with Kafka', 'AWS Certified'."
     )
 
-# Define the prompt and configuration for Ollama
+
 def extract_skills_requirements(job_post: str, model_name: str = "llama3.2") -> JobRequirements:
     """
     Sends the job posting to an Ollama model and extracts structured data.
@@ -123,17 +122,16 @@ def extract_skills_requirements(job_post: str, model_name: str = "llama3.2") -> 
         json_string = response['message']['content']
         
         # Validate and convert the JSON string back into a Pydantic object
-        extracted_data = JobRequirements.model_validate_json(json_string) # TODO: prepusc head 5 linijek od poczatku do konca zeby sprawdzic czy ci sie procesuje
+        extracted_data = JobRequirements.model_validate_json(json_string)
         
         return extracted_data
 
     except Exception as e:
         print(f"An error occurred: {e}")
-        print("Ensure Ollama server is running and the model is pulled.") # TODO pydantic w collabie
+        print("Ensure Ollama server is running and the model is pulled.")
         return None
     
 
-    # Add extracted skills and formal requirements to the DataFrame
 def append_skills_requirements(df: pd.DataFrame) -> pd.DataFrame:
     """
     Extracts skills and formal requirements from each job description in the DataFrame
@@ -314,9 +312,10 @@ def print_clusters_and_skills(skill_to_cluster_id, K):
         print(", ".join(cluster_skills))
         print("-" * 50)
 
-
-# Map each skill to its cluster label
 def map_skills_to_clusters(skills_list, skill_to_cluster_id):
+    """
+    Maps a list of skills to their corresponding cluster label.
+    """
     return [skill_to_cluster_id.get(skill) for skill in skills_list if skill in skill_to_cluster_id]
 
 
@@ -337,14 +336,12 @@ def plot_cluster_heatmap(df_clustered, figsize=(12, 8), cmap="YlGnBu"):
                                      .size() \
                                      .unstack(fill_value=0)
 
-    # 2. Normalize the counts row-wise (i.e., by 'general job classification')
+    # Normalize the counts row-wise (i.e., by 'general job classification')
     # This converts the counts into proportions (percentages) within each row.
     cluster_proportion = cluster_frequency.div(cluster_frequency.sum(axis=1), axis=0)
 
-    # 3. Plot the heatmap using the proportions
+    # Plot the heatmap using the proportions
     plt.figure(figsize=figsize)
-    # Set annot=True to show the actual proportion values on the heatmap (optional)
-    # Use fmt=".2f" to format proportions to two decimal places if annot=True
     sns.heatmap(cluster_proportion, annot=False, cmap=cmap, cbar=True, linewidths=0.5)
 
     plt.title("Proportional Frequency of Cluster IDs in General Job Classifications", fontsize=14)
@@ -391,7 +388,7 @@ def plot_2d_clusters_pca(df_to_plot: pd.DataFrame, k_clusters: int):
         print(f"Error: DataFrame must have at least two coordinate columns and a 'Cluster' column.")
         return
 
-    # --- Setup and Scatter Plot ---
+    # Setup and Scatter Plot
     plt.figure(figsize=(10, 8))
     
     # Create the scatter plot
@@ -404,7 +401,6 @@ def plot_2d_clusters_pca(df_to_plot: pd.DataFrame, k_clusters: int):
         alpha=0.6      # Transparency
     )
 
-    # --- Title and Labels ---
     # Use the inferred reduction method in the title
     title = f'K-Means Clusters (K={k_clusters}) visualized with PCA'
     plt.title(title, fontsize=16)
@@ -412,7 +408,6 @@ def plot_2d_clusters_pca(df_to_plot: pd.DataFrame, k_clusters: int):
     plt.xlabel(df_to_plot.columns[0], fontsize=12)
     plt.ylabel(df_to_plot.columns[1], fontsize=12)
 
-    # --- Legend and Final Touches ---
     # Add a legend
     legend1 = plt.legend(
         *scatter.legend_elements(),
@@ -424,7 +419,7 @@ def plot_2d_clusters_pca(df_to_plot: pd.DataFrame, k_clusters: int):
     plt.grid(True, linestyle='--', alpha=0.6) 
     plt.show()
 
-# count the most common skills in each cluster
+
 def most_common_skills_per_cluster(df_clustered, skill_to_cluster_id, top_n=10):
     """
     Identifies the most common skills in each cluster.
@@ -457,11 +452,41 @@ def most_common_skills_per_cluster(df_clustered, skill_to_cluster_id, top_n=10):
 
     return most_common_skills
 
-# what clusters are repeated across general job classification
-# Create binary features for each cluster
+
 def create_cluster_features(cluster_ids, K):
+    """
+    Creates a binary feature vector indicating the presence of each cluster ID.
+    Args:
+        cluster_ids (list): List of cluster IDs associated with a job posting.
+        K (int): Total number of clusters.
+    """
     features = np.zeros(K)
     for cid in cluster_ids:
         if cid is not None and 0 <= cid < K:
             features[cid] = 1
     return features
+
+
+def sentence_embedding(sentence: str, max_length: int, embedding_dim: int, embeddings) -> np.ndarray:
+    """
+    Converts a sentence to a fixed-size vector using provided word embeddings.
+
+    Args:
+        sentence (str): The input sentence.
+        max_length (int): Maximum number of tokens to use / sequence length.
+        embedding_dim (int): Dimensionality of the embeddings.
+        embeddings: Embedding object that exposes `.stoi` and `.vectors` (e.g., GloVe from torchtext).
+
+    Returns:
+        np.ndarray: A flattened vector representation of the sentence with shape (max_length * embedding_dim,).
+    """
+    words = str(sentence).split()
+    num_words = min(len(words), max_length)
+    embedding_sentence = np.zeros((max_length, embedding_dim), dtype=float)
+
+    for i in range(num_words):
+        word = words[i]
+        if word in embeddings.stoi:  # Check if the word exists in embedding vocabulary
+            embedding_sentence[i] = embeddings.vectors[embeddings.stoi[word]]
+
+    return embedding_sentence.flatten()
