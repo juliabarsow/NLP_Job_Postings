@@ -336,8 +336,7 @@ def plot_cluster_heatmap(df_clustered, figsize=(12, 8), cmap="YlGnBu"):
                                      .size() \
                                      .unstack(fill_value=0)
 
-    # Normalize the counts row-wise (i.e., by 'general job classification')
-    # This converts the counts into proportions (percentages) within each row.
+    # Normalize the counts row-wise by gjc
     cluster_proportion = cluster_frequency.div(cluster_frequency.sum(axis=1), axis=0)
 
     # Plot the heatmap using the proportions
